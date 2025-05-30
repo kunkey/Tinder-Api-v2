@@ -38,12 +38,24 @@ npm install
 ### 3. Cấu hình
 - Điền thông tin xác thực Tinder vào file `config/auth.json` (xem hướng dẫn chi tiết trong app).
 - Tùy chỉnh các thiết lập trong `config/setting.json` nếu muốn.
+- Tạo file `.env` để cấu hình cổng (PORT) nếu muốn:
+
+```env
+PORT=8080
+```
 
 ### 4. Chạy ứng dụng
 ```bash
 npm start
 ```
-- Truy cập: [http://localhost:3000](http://localhost:3000)
+- Truy cập: [http://localhost:3000](http://localhost:3000) (hoặc cổng bạn đã cấu hình)
+
+### 5. Chạy bằng Docker (khuyên dùng cho production)
+```bash
+docker build -t tinder-tool .
+docker run -d --env-file .env -p 8080:8080 tinder-tool
+```
+- Truy cập: [http://localhost:8080](http://localhost:8080)
 
 ---
 
