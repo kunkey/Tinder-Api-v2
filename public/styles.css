@@ -1,0 +1,807 @@
+:root {
+    --tinder-pink: #FF6B6B;
+    --tinder-orange: #FF8E53;
+    --tinder-yellow: #FFD93D;
+    --tinder-blue: #4A90E2;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: #f5f5f5;
+}
+
+.container {
+    width: 100vw;
+    max-width: 100vw;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+h1 {
+    text-align: center;
+    color: var(--tinder-pink);
+    margin-bottom: 2rem;
+}
+
+.sections-row {
+    display: flex;
+    flex-direction: row;
+    gap: 1.2rem;
+    margin-bottom: 1.2rem;
+    width: 100vw;
+    box-sizing: border-box;
+}
+
+.auth-section, .settings-section, .swiping-section, .matches-section {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.6rem 0.5rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-title {
+    text-align: center;
+    font-size: 2.5rem;
+    color: var(--tinder-pink);
+    margin: 1.2rem 0 2.2rem 0;
+    letter-spacing: 1px;
+    font-weight: bold;
+    width: 100vw;
+}
+
+.sections-row.swipe-match-row {
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    margin: 0;
+    width: 100vw;
+    box-sizing: border-box;
+    height: auto;
+    align-items: stretch;
+}
+
+.swiping-section {
+    flex: 7 1 0;
+    padding: 0.5rem 0.1rem 0.5rem 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    width: 100%;
+}
+
+.matches-section {
+    flex: 3 1 0;
+    padding: 0.5rem 0 0.5rem 0.1rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    width: 100%;
+}
+
+.list-container, #swipingList, #matchesList {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    min-width: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+#swipingList {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    overflow-y: auto;
+    max-height: 72vh;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#matchesList {
+    flex: 1 1 0;
+    overflow-y: auto;
+    max-height: 72vh;
+    min-height: 300px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.user-card, .match-card {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    margin: 0 auto 1rem auto;
+    box-sizing: border-box;
+}
+
+section {
+    background: white;
+    border-radius: 10px;
+    padding: 0.6rem 0.7rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    min-width: 280px;
+    max-width: 340px;
+    flex: 1 1 0;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
+}
+
+h2 {
+    color: var(--tinder-blue);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--tinder-yellow);
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #666;
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Toggle Switch */
+.toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    padding-left: 50px;
+}
+
+.toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 20px;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--tinder-pink);
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+/* Buttons */
+button {
+    background: var(--tinder-pink);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: var(--tinder-orange);
+}
+
+/* List Container */
+.list-container {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+/* User Cards */
+.user-card img,
+.match-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.user-info,
+.match-info {
+    padding: 1rem;
+}
+
+.user-info h3,
+.match-info h3 {
+    color: var(--tinder-blue);
+    margin-bottom: 0.5rem;
+}
+
+.user-info p,
+.match-info p {
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.like-btn {
+    background: var(--tinder-pink);
+}
+
+.message-btn {
+    background: var(--tinder-blue);
+}
+
+.unmatch-btn {
+    background: #ff4444;
+}
+
+/* Alerts */
+.alert {
+    position: fixed;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 1rem 2rem;
+    border-radius: 4px;
+    color: white;
+    animation: slideIn 0.3s ease-out;
+    z-index: 2000;
+    min-width: 240px;
+    max-width: 90vw;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.alert.success {
+    background: #4CAF50;
+}
+
+.alert.error {
+    background: #f44336;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+    .sections-row.swipe-match-row {
+        flex-direction: column;
+        gap: 0.7rem;
+        height: auto;
+    }
+    .swiping-section, .matches-section {
+        padding: 0.4rem 0.2rem;
+        height: auto;
+    }
+    #swipingList, #matchesList {
+        max-height: 50vh;
+    }
+    #swipingList {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 0.2rem;
+    }
+    section {
+        padding: 0.3rem 0.2rem;
+    }
+    h1 {
+        font-size: 1.3rem;
+    }
+    h2 {
+        font-size: 1.1rem;
+    }
+    #swipingList {
+        grid-template-columns: 1fr;
+    }
+}
+
+.control-buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.control-buttons .btn {
+    min-width: 120px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.control-buttons .btn-success {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+}
+
+.control-buttons .btn-success:hover {
+    background-color: #45a049;
+    border-color: #45a049;
+}
+
+.control-buttons .btn-danger {
+    background-color: #f44336;
+    border-color: #f44336;
+}
+
+.control-buttons .btn-danger:hover {
+    background-color: #da190b;
+    border-color: #da190b;
+}
+
+.control-buttons .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.config-btn {
+    position: fixed;
+    top: 32px;
+    right: 40px;
+    z-index: 1001;
+    background: var(--tinder-pink);
+    color: #fff;
+    border: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(255,107,107,0.18);
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+    padding: 0;
+}
+.config-btn svg {
+    width: 32px;
+    height: 32px;
+    display: block;
+}
+.config-btn:hover {
+    background: var(--tinder-orange);
+    box-shadow: 0 8px 24px rgba(255,107,107,0.28);
+    transform: scale(1.08);
+}
+
+.start-btn {
+    position: fixed;
+    top: 32px;
+    right: 100px;
+    z-index: 1001;
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(76,175,80,0.18);
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+    padding: 0;
+}
+.start-btn svg {
+    width: 32px;
+    height: 32px;
+    display: block;
+}
+.start-btn:hover {
+    background: #388e3c;
+    box-shadow: 0 8px 24px rgba(76,175,80,0.28);
+    transform: scale(1.08);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+    background: rgba(0,0,0,0.35);
+}
+
+.modal-content {
+    background: #fff;
+    margin: 4% auto;
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+    width: 95vw;
+    max-width: 1000px;
+    min-width: 350px;
+    position: relative;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    resize: horizontal;
+    overflow: auto;
+}
+
+.close {
+    color: #aaa;
+    position: absolute;
+    top: 18px;
+    right: 24px;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.close:hover {
+    color: var(--tinder-pink);
+}
+
+.modal-forms {
+    display: flex;
+    gap: 2.5rem;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+.modal-forms section {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 50%;
+    background: none;
+    box-shadow: none;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+}
+@media (max-width: 900px) {
+    .modal-content {
+        padding: 1rem 0.5rem;
+        max-width: 98vw;
+    }
+    .modal-forms {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .modal-forms section {
+        max-width: 100%;
+        padding: 0;
+    }
+}
+
+.recommend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 2rem;
+    width: 90vw;
+    max-width: 1879px;
+    margin: 2rem auto 0 auto;
+    padding-bottom: 2rem;
+}
+.recommend-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: box-shadow 0.2s, transform 0.2s;
+    padding-bottom: 1rem;
+}
+.recommend-card:hover {
+    box-shadow: 0 8px 32px rgba(255,107,107,0.18);
+    transform: translateY(-4px) scale(1.03);
+}
+.recommend-img-wrap {
+    width: 100%;
+    aspect-ratio: 1/1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f5;
+    border-bottom: 1px solid #f0f0f0;
+}
+.recommend-img-wrap img {
+    width: 90%;
+    height: 90%;
+    object-fit: cover;
+    border-radius: 4%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 0.5rem 0;
+}
+.recommend-info {
+    width: 100%;
+    text-align: center;
+    padding: 0.5rem 1rem 0 1rem;
+}
+.recommend-info h3 {
+    margin: 0.5rem 0 0.2rem 0;
+    color: var(--tinder-pink);
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+.recommend-info p {
+    color: #666;
+    font-size: 1rem;
+    margin: 0;
+    word-break: break-word;
+}
+
+.chat-btn {
+    position: fixed;
+    top: 32px;
+    right: 170px;
+    z-index: 1001;
+    background: #4A90E2;
+    color: #fff;
+    border: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(74,144,226,0.18);
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+    padding: 0;
+}
+.chat-btn svg {
+    width: 32px;
+    height: 32px;
+    display: block;
+}
+.chat-btn:hover {
+    background: #357abD;
+    box-shadow: 0 8px 24px rgba(74,144,226,0.28);
+    transform: scale(1.08);
+}
+
+.chat-modal-content {
+    max-width: 600px;
+    min-width: 320px;
+}
+#unrepliedList {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+}
+.unreplied-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 1.2rem;
+    padding: 0.7rem 1rem;
+    gap: 1rem;
+}
+.unreplied-info {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+.unreplied-info img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.unreplied-name {
+    font-weight: bold;
+    color: var(--tinder-pink);
+    font-size: 1.1rem;
+}
+.unreplied-id {
+    color: #aaa;
+    font-size: 0.9rem;
+}
+.unreplied-message {
+    color: #666;
+    font-size: 0.95rem;
+    margin-top: 0.3rem;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.unreplied-action {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.unreplied-input {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.4rem 0.8rem;
+    font-size: 1rem;
+    outline: none;
+    min-width: 120px;
+    max-width: 200px;
+    transition: border 0.2s;
+}
+.unreplied-input:focus {
+    border: 1.5px solid var(--tinder-blue);
+}
+.unreplied-send {
+    background: var(--tinder-blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.4rem 1.1rem;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.unreplied-send:hover {
+    background: var(--tinder-pink);
+}
+
+.matches-btn {
+    position: fixed;
+    top: 32px;
+    right: 240px;
+    z-index: 1001;
+    background: #FF6B6B;
+    color: #fff;
+    border: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(255,107,107,0.18);
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+    padding: 0;
+}
+.matches-btn svg {
+    width: 32px;
+    height: 32px;
+    display: block;
+}
+.matches-btn:hover {
+    background: #FF8E53;
+    box-shadow: 0 8px 24px rgba(255,107,107,0.28);
+    transform: scale(1.08);
+}
+
+.modal-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: var(--tinder-pink);
+}
+
+.tab-btn.active {
+    color: var(--tinder-pink);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -0.5rem;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--tinder-pink);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.big-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    margin-right: 0.7rem;
+}
+.unreplied-distance {
+    color: #4A90E2;
+    font-size: 0.98rem;
+    margin-bottom: 0.2rem;
+    font-weight: 500;
+}
+
+.dot-noti {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: #e74c3c;
+    border-radius: 50%;
+    margin-left: 8px;
+    vertical-align: middle;
+    box-shadow: 0 0 6px #e74c3c99;
+} 

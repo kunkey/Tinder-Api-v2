@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinder Tool</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title">Tinder Tool</h1>
+        <div class="recommend-grid" id="recommendGrid"></div>
+        <button id="startFloatingBtn" class="start-btn" title="Bắt đầu">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="11" fill="#4CAF50"/>
+                <path d="M9 8l6 4-6 4V8z" fill="#fff"/>
+            </svg>
+        </button>
+        <button id="openConfigBtn" class="config-btn" title="Cấu hình">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="gearGradient" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#FF6B6B"/>
+                        <stop offset="1" stop-color="#FF8E53"/>
+                    </linearGradient>
+                </defs>
+                <circle cx="12" cy="12" r="11" fill="url(#gearGradient)"/>
+                <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.23l-2.39.96a7.03 7.03 0 0 0-1.62-.94l-.36-2.53A.5.5 0 0 0 13 2h-2a.5.5 0 0 0-.5.42l-.36 2.53c-.6.23-1.17.54-1.62.94l-2.39-.96a.5.5 0 0 0-.61.23l-1.92 3.32a.5.5 0 0 0 .12.64l2.03 1.58c-.04.3-.06.61-.06.94s.02.64.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.23l2.39-.96c.5.4 1.05.72 1.62.94l.36 2.53A.5.5 0 0 0 11 22h2a.5.5 0 0 0 .5-.42l.36-2.53c.6-.23 1.17-.54 1.62-.94l2.39.96a.5.5 0 0 0 .61-.23l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z" fill="#fff"/>
+            </svg>
+        </button>
+        <button id="chatBtn" class="chat-btn" title="Tin nhắn chưa trả lời">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="11" fill="#4A90E2"/>
+                <path d="M7 8h10M7 12h6M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 0 1-4-.8L3 20l.8-3.2A7.96 7.96 0 0 1 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+        </button>
+        <button id="matchesBtn" class="matches-btn" title="Danh sách match">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="11" fill="#FF6B6B"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="#fff"/>
+            </svg>
+        </button>
+        <!-- Modal cấu hình -->
+        <div id="configModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeConfigBtn">&times;</span>
+                <div class="modal-forms">
+                    <section class="auth-section">
+                        <h2>Cấu hình Auth</h2>
+                        <form id="authForm">
+                            <div class="form-group">
+                                <label for="meID">Me ID</label>
+                                <input type="text" id="meID" name="meID" value="<%= auth.meID %>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="app-session-id">App Session ID</label>
+                                <input type="text" id="app-session-id" name="app-session-id" value="<%= auth['app-session-id'] %>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="app-session-time-elapsed">App Session Time Elapsed</label>
+                                <input type="text" id="app-session-time-elapsed" name="app-session-time-elapsed" value="<%= auth['app-session-time-elapsed'] %>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="persistent-device-id">Persistent Device ID</label>
+                                <input type="text" id="persistent-device-id" name="persistent-device-id" value="<%= auth['persistent-device-id'] %>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="user-session-id">User Session ID</label>
+                                <input type="text" id="user-session-id" name="user-session-id" value="<%= auth['user-session-id'] %>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="user-session-time-elapsed">User Session Time Elapsed</label>
+                                <input type="text" id="user-session-time-elapsed" name="user-session-time-elapsed" value="<%= auth['user-session-time-elapsed'] %>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="x-auth-token">X Auth Token</label>
+                                <input type="text" id="x-auth-token" name="x-auth-token" value="<%= auth['x-auth-token'] %>" required>
+                            </div>
+                            <button type="submit">Cập nhật Auth</button>
+                        </form>
+                    </section>
+                    <section class="settings-section">
+                        <h2>Cấu hình</h2>
+                        <form id="settingsForm">
+                            <div class="form-group">
+                                <label class="toggle">
+                                    <input type="checkbox" name="likeRecommendUser" <%= settings.likeRecommendUser ? 'checked' : '' %>>
+                                    <span class="slider"></span>
+                                    Like người dùng được đề xuất
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="toggle">
+                                    <input type="checkbox" name="sendMessageToMatchedUser" <%= settings.sendMessageToMatchedUser ? 'checked' : '' %>>
+                                    <span class="slider"></span>
+                                    Gửi tin nhắn cho người dùng đã match
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label for="message">Danh sách tin nhắn (mỗi dòng 1 tin nhắn, sử dụng {{name}} để thay thế tên)</label>
+                                <textarea id="message" name="message" rows="5" required><%= settings.message.join('\n') %></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="lat">Vĩ độ</label>
+                                <input type="number" id="lat" name="lat" step="any" value="<%= settings.location.lat %>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="long">Kinh độ</label>
+                                <input type="number" id="long" name="long" step="any" value="<%= settings.location.long %>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="distance">Khoảng cách tối đa (km)</label>
+                                <input type="number" id="distance" name="distance" value="<%= settings.unMatch.distance %>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="gender">Giới tính:</label>
+                                <select id="gender" name="gender" class="form-control">
+                                    <option value="0">Tất cả</option>
+                                    <option value="1">Nam</option>
+                                    <option value="2">Nữ</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">Cập nhật Cài đặt</button>
+                            </div>
+                        </form>
+                        <div class="control-buttons">
+                            <button id="startBtn" class="btn btn-success">Bắt đầu</button>
+                            <button id="stopBtn" class="btn btn-danger" disabled>Dừng</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+        <div id="chatModal" class="modal">
+            <div class="modal-content chat-modal-content" style="max-width: 800px; min-width: 400px;">
+                <span class="close" id="closeChatBtn">&times;</span>
+                <div class="modal-tabs">
+                    <button class="tab-btn active" data-tab="unreplied">Tin nhắn chưa trả lời</button>
+                    <button class="tab-btn" data-tab="messages">Tin nhắn đã nhắn</button>
+                </div>
+                <div id="unrepliedTab" class="tab-content active">
+                    <div id="unrepliedList"></div>
+                </div>
+                <div id="messagesTab" class="tab-content">
+                    <div id="messagesList"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Thêm modal hiển thị ảnh đại diện -->
+        <div id="avatarModal" class="modal">
+            <div class="modal-content" style="max-width: 600px; min-width: 320px; text-align:center;">
+                <span class="close" id="closeAvatarModal">&times;</span>
+                <div id="avatarImages" style="display:flex; flex-wrap:wrap; gap:1rem; justify-content:center;"></div>
+            </div>
+        </div>
+        <!-- Thêm modal hiển thị ảnh lớn khi click vào từng ảnh -->
+        <div id="photoFullModal" class="modal">
+            <div class="modal-content" style="max-width: 90vw; max-height: 90vh; background: transparent; box-shadow:none; display:flex; align-items:center; justify-content:center;">
+                <span class="close" id="closePhotoFullModal" style="position:absolute;top:16px;right:32px;font-size:2.5rem;color:#fff;z-index:10;cursor:pointer;">&times;</span>
+                <img id="photoFullImg" src="" style="max-width:90vw; max-height:80vh; border-radius:18px; box-shadow:0 4px 32px rgba(0,0,0,0.25); background:#fff;" />
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Kết nối Socket.IO
+        const socket = io();
+
+        // Xử lý form Auth
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+
+            try {
+                const response = await fetch('/update-auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                showAlert(result.message, result.success);
+            } catch (error) {
+                showAlert('Lỗi khi cập nhật auth', false);
+            }
+        });
+
+        // Xử lý form Settings
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+
+            try {
+                const response = await fetch('/update-settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams(data)
+                });
+                const result = await response.json();
+                showAlert(result.message, result.success);
+            } catch (error) {
+                showAlert('Lỗi khi cập nhật cài đặt', false);
+            }
+        });
+
+        // Hiển thị thông báo
+        function showAlert(message, isSuccess) {
+            const alert = document.createElement('div');
+            alert.className = `alert ${isSuccess ? 'success' : 'error'}`;
+            alert.textContent = message;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
+
+        // Thêm biến để theo dõi trạng thái
+        let isRunning = false;
+        let autoLikeInterval = null;
+        let autoMessageInterval = null;
+        let messagesPageToken = null;
+        let autoRefreshMessagesInterval = null;
+
+        // Xử lý nút Start nổi
+        const startFloatingBtn = document.getElementById('startFloatingBtn');
+        startFloatingBtn.onclick = async () => {
+            try {
+                const response = await fetch('/api/start', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                const data = await response.json();
+                if (data.success) {
+                    showAlert('Đã bắt đầu tự động like và gửi tin nhắn', true);
+                } else {
+                    showAlert(data.message || 'Không thể bắt đầu', false);
+                }
+            } catch (error) {
+                showAlert('Lỗi khi bắt đầu: ' + error.message, false);
+            }
+        };
+
+        // Xử lý nút Start
+        document.getElementById('startBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    isRunning = true;
+                    document.getElementById('startBtn').disabled = true;
+                    document.getElementById('stopBtn').disabled = false;
+                    showAlert('Đã bắt đầu tự động like và gửi tin nhắn', 'success');
+                } else {
+                    showAlert(data.message || 'Không thể bắt đầu', 'error');
+                }
+            } catch (error) {
+                showAlert('Lỗi khi bắt đầu: ' + error.message, 'error');
+            }
+        });
+
+        // Xử lý nút Stop
+        document.getElementById('stopBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/stop', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    isRunning = false;
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    showAlert('Đã dừng tự động like và gửi tin nhắn', 'success');
+                } else {
+                    showAlert(data.message || 'Không thể dừng', 'error');
+                }
+            } catch (error) {
+                showAlert('Lỗi khi dừng: ' + error.message, 'error');
+            }
+        });
+
+        // Modal config
+        const configModal = document.getElementById('configModal');
+        const openConfigBtn = document.getElementById('openConfigBtn');
+        const closeConfigBtn = document.getElementById('closeConfigBtn');
+        openConfigBtn.onclick = () => configModal.style.display = 'block';
+        closeConfigBtn.onclick = () => configModal.style.display = 'none';
+        window.onclick = (event) => {
+            if (event.target === configModal) configModal.style.display = 'none';
+        };
+
+        // Nút chat nổi và modal
+        const chatBtn = document.getElementById('chatBtn');
+        const chatModal = document.getElementById('chatModal');
+        const closeChatBtn = document.getElementById('closeChatBtn');
+        chatBtn.onclick = () => {
+            chatModal.style.display = 'block';
+            fetchUnrepliedMatches();
+        };
+        closeChatBtn.onclick = () => chatModal.style.display = 'none';
+        window.onclick = (event) => {
+            if (event.target === chatModal) chatModal.style.display = 'none';
+            if (event.target === configModal) configModal.style.display = 'none';
+        };
+
+        // Thêm xử lý cho nút matches
+        const matchesBtn = document.getElementById('matchesBtn');
+        matchesBtn.onclick = () => {
+            chatModal.style.display = 'block';
+            document.querySelector('[data-tab="messages"]').click();
+        };
+
+        // Xử lý chuyển tab
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Xóa active class từ tất cả các tab
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Thêm active class cho tab được chọn
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab + 'Tab').classList.add('active');
+                
+                // Load dữ liệu tương ứng
+                if (btn.dataset.tab === 'unreplied') {
+                    fetchUnrepliedMatches();
+                } else {
+                    fetchMessages();
+                }
+            });
+        });
+
+        // Hàm lấy danh sách tin nhắn đã nhắn
+        async function fetchMessages(isLoadMore = false) {
+            const list = document.getElementById('messagesList');
+            if (!isLoadMore) {
+                list.innerHTML = '';
+                // Thêm nút cập nhật thủ công
+                let refreshBtn = document.getElementById('refreshMessagesBtn');
+                if (!refreshBtn) {
+                    refreshBtn = document.createElement('button');
+                    refreshBtn.id = 'refreshMessagesBtn';
+                    refreshBtn.textContent = 'Cập nhật';
+                    refreshBtn.style.display = 'block';
+                    refreshBtn.style.margin = '0 auto 18px auto';
+                    refreshBtn.onclick = () => fetchMessages();
+                    list.appendChild(refreshBtn);
+                }
+                // Thêm loading dưới nút cập nhật
+                let loadingDiv = document.getElementById('messagesLoadingDiv');
+                if (!loadingDiv) {
+                    loadingDiv = document.createElement('div');
+                    loadingDiv.id = 'messagesLoadingDiv';
+                    loadingDiv.style.textAlign = 'center';
+                    loadingDiv.style.marginBottom = '12px';
+                    list.appendChild(loadingDiv);
+                }
+                loadingDiv.innerHTML = 'Đang tải...';
+                messagesPageToken = null;
+            }
+            try {
+                let url = '/api/messages';
+                if (messagesPageToken) url += `?page_token=${messagesPageToken}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                const matches = data.data && data.data.matches
+                    ? data.data.matches
+                    : (data.data && data.data.data && data.data.data.matches ? data.data.data.matches : []);
+                const nextPageToken = data.data && data.data.next_page_token ? data.data.next_page_token : (data.data && data.data.data && data.data.data.next_page_token ? data.data.data.next_page_token : null);
+                if (!isLoadMore) {
+                    // Xóa các item cũ (trừ nút cập nhật và loading)
+                    Array.from(list.children).forEach(child => {
+                        if (child.id !== 'refreshMessagesBtn' && child.id !== 'messagesLoadingDiv') child.remove();
+                    });
+                }
+                const messages = matches.filter(match => match.messages && match.messages.length > 0);
+                if (!isLoadMore && messages.length === 0) {
+                    let loadingDiv = document.getElementById('messagesLoadingDiv');
+                    if (loadingDiv) loadingDiv.innerHTML = 'Không có tin nhắn nào';
+                    return;
+                }
+                let loadingDiv = document.getElementById('messagesLoadingDiv');
+                if (loadingDiv) loadingDiv.innerHTML = '';
+                messages.forEach(match => {
+                    const item = document.createElement('div');
+                    item.className = 'unreplied-item';
+                    const lastMessage = match.messages[match.messages.length - 1];
+                    const isMe = lastMessage.from && lastMessage.from === '<%= auth.meID %>';
+                    const distance = match.distance_mi ? (match.distance_mi * 1.60934).toFixed(1) : (match.distance_km ? match.distance_km : null);
+                    item.innerHTML = `
+                        <div class="unreplied-info">
+                            <img src="${match.person.photos[0].url}" alt="${match.person.name}" class="big-avatar avatar-clickable" />
+                            <div>
+                                <div class="unreplied-name">${match.person.name}
+                                    ${!isMe ? '<span class="dot-noti"></span>' : ''}
+                                </div>
+                                ${distance ? `<div class='unreplied-distance'>${distance} km</div>` : ''}
+                                <div class="unreplied-message" style="color:${isMe ? '#888' : '#e74c3c'}">${lastMessage.message}</div>
+                            </div>
+                        </div>
+                        <div class="unreplied-action">
+                            <input type="text" placeholder="Nhập tin nhắn..." class="unreplied-input" />
+                            <button class="unreplied-send">Gửi</button>
+                        </div>
+                    `;
+                    // Thêm sự kiện click cho avatar
+                    item.querySelector('.big-avatar').onclick = () => {
+                        const avatarModal = document.getElementById('avatarModal');
+                        const avatarImages = document.getElementById('avatarImages');
+                        avatarImages.innerHTML = '';
+                        match.person.photos.forEach(photo => {
+                            const img = document.createElement('img');
+                            img.src = photo.url;
+                            img.style.width = '240px';
+                            img.style.height = '240px';
+                            img.style.objectFit = 'cover';
+                            img.style.borderRadius = '16px';
+                            img.style.boxShadow = '0 2px 12px rgba(0,0,0,0.10)';
+                            img.style.cursor = 'pointer';
+                            img.onclick = () => {
+                                const photoFullModal = document.getElementById('photoFullModal');
+                                const photoFullImg = document.getElementById('photoFullImg');
+                                photoFullImg.src = photo.url;
+                                photoFullModal.style.display = 'block';
+                            };
+                            avatarImages.appendChild(img);
+                        });
+                        avatarModal.style.display = 'block';
+                    };
+                    item.querySelector('.unreplied-send').onclick = async () => {
+                        const msg = item.querySelector('.unreplied-input').value.trim();
+                        if (!msg) return alert('Nhập nội dung tin nhắn!');
+                        try {
+                            const resp = await fetch('/api/send-message', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ matchId: match._id, message: msg })
+                            });
+                            const result = await resp.json();
+                            if (result.success) {
+                                showAlert('Gửi tin nhắn thành công', true);
+                                item.querySelector('.unreplied-input').value = '';
+                                fetchMessages(); // Refresh lại danh sách
+                            } else {
+                                showAlert(result.message || 'Lỗi khi gửi tin nhắn', false);
+                            }
+                        } catch (e) {
+                            showAlert('Lỗi khi gửi tin nhắn', false);
+                        }
+                    };
+                    list.appendChild(item);
+                });
+                // Đảm bảo nút Xem thêm luôn ở cuối danh sách
+                let loadMoreBtn = document.getElementById('loadMoreMessagesBtn');
+                if (loadMoreBtn) loadMoreBtn.remove();
+                if (nextPageToken) {
+                    messagesPageToken = nextPageToken;
+                    loadMoreBtn = document.createElement('button');
+                    loadMoreBtn.id = 'loadMoreMessagesBtn';
+                    loadMoreBtn.textContent = 'Xem thêm';
+                    loadMoreBtn.style.display = 'block';
+                    loadMoreBtn.style.margin = '20px auto 0 auto';
+                    loadMoreBtn.onclick = () => fetchMessages(true);
+                    list.appendChild(loadMoreBtn);
+                } else {
+                    messagesPageToken = null;
+                }
+            } catch (e) {
+                let loadingDiv = document.getElementById('messagesLoadingDiv');
+                if (loadingDiv) loadingDiv.innerHTML = 'Lỗi tải dữ liệu';
+            }
+        }
+
+        // Hiển thị danh sách gợi ý match dạng lưới
+        async function fetchRecommendations() {
+            try {
+                const res = await fetch('/api/recommendations');
+                const data = await res.json();
+                const grid = document.getElementById('recommendGrid');
+                grid.innerHTML = '';
+                if (!data.data || !data.data.data || !data.data.data.results) {
+                    grid.innerHTML = '<p style="text-align:center">Không có dữ liệu gợi ý</p>';
+                    return;
+                }
+                data.data.data.results.forEach(user => {
+                    const card = document.createElement('div');
+                    card.className = 'recommend-card';
+                    card.innerHTML = `
+                        <div class="recommend-img-wrap">
+                            <img src="${user.user.photos[0].url}" alt="${user.user.name}" />
+                        </div>
+                        <div class="recommend-info">
+                            <h3>${user.user.name}</h3>
+                            <p>${user.user.bio ? user.user.bio : ''}</p>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (e) {
+                document.getElementById('recommendGrid').innerHTML = '<p style="text-align:center">Lỗi tải dữ liệu</p>';
+            }
+        }
+        window.onload = fetchRecommendations;
+
+        // Lắng nghe lỗi từ server (token hết hạn, lỗi API...)
+        socket.on('server-error', (data) => {
+            showAlert(data.message, false);
+        });
+
+        // Lấy danh sách matches chưa trả lời
+        async function fetchUnrepliedMatches() {
+            const list = document.getElementById('unrepliedList');
+            list.innerHTML = '<div style="text-align:center">Đang tải...</div>';
+            try {
+                const res = await fetch('/api/matches');
+                const data = await res.json();
+                if (!data.data || !data.data.data || !data.data.data.matches) {
+                    list.innerHTML = '<div style="text-align:center">Không có dữ liệu</div>';
+                    return;
+                }
+                const unreplied = data.data.data.matches.filter(match => !match.last_message);
+                if (unreplied.length === 0) {
+                    list.innerHTML = '<div style="text-align:center">Không có match nào chưa trả lời</div>';
+                    return;
+                }
+                list.innerHTML = '';
+                unreplied.forEach(match => {
+                    const item = document.createElement('div');
+                    item.className = 'unreplied-item';
+                    const lastMessage = match.messages && match.messages.length > 0 ? match.messages[match.messages.length - 1] : null;
+                    item.innerHTML = `
+                        <div class="unreplied-info">
+                            <img src="${match.person.photos[0].url}" alt="${match.person.name}" class="big-avatar avatar-clickable" />
+                            <div>
+                                <div class="unreplied-name">${match.person.name}</div>
+                                ${lastMessage ? `<div class="unreplied-message">${lastMessage.message}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="unreplied-action">
+                            <input type="text" placeholder="Nhập tin nhắn..." class="unreplied-input" />
+                            <button class="unreplied-send">Gửi</button>
+                        </div>
+                    `;
+                    // Thêm sự kiện click cho avatar
+                    item.querySelector('.big-avatar').onclick = () => {
+                        const avatarModal = document.getElementById('avatarModal');
+                        const avatarImages = document.getElementById('avatarImages');
+                        avatarImages.innerHTML = '';
+                        match.person.photos.forEach(photo => {
+                            const img = document.createElement('img');
+                            img.src = photo.url;
+                            img.style.width = '240px';
+                            img.style.height = '240px';
+                            img.style.objectFit = 'cover';
+                            img.style.borderRadius = '16px';
+                            img.style.boxShadow = '0 2px 12px rgba(0,0,0,0.10)';
+                            img.style.cursor = 'pointer';
+                            img.onclick = () => {
+                                const photoFullModal = document.getElementById('photoFullModal');
+                                const photoFullImg = document.getElementById('photoFullImg');
+                                photoFullImg.src = photo.url;
+                                photoFullModal.style.display = 'block';
+                            };
+                            avatarImages.appendChild(img);
+                        });
+                        avatarModal.style.display = 'block';
+                    };
+                    item.querySelector('.unreplied-send').onclick = async () => {
+                        const msg = item.querySelector('.unreplied-input').value.trim();
+                        if (!msg) return alert('Nhập nội dung tin nhắn!');
+                        try {
+                            const resp = await fetch('/api/send-message', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ matchId: match._id, message: msg })
+                            });
+                            const result = await resp.json();
+                            if (result.success) {
+                                showAlert('Gửi tin nhắn thành công', true);
+                                item.remove();
+                            } else {
+                                showAlert(result.message || 'Lỗi khi gửi tin nhắn', false);
+                            }
+                        } catch (e) {
+                            showAlert('Lỗi khi gửi tin nhắn', false);
+                        }
+                    };
+                    list.appendChild(item);
+                });
+            } catch (e) {
+                list.innerHTML = '<div style="text-align:center">Lỗi tải dữ liệu</div>';
+            }
+        }
+
+        // Đóng modal avatar
+        const avatarModal = document.getElementById('avatarModal');
+        const closeAvatarModal = document.getElementById('closeAvatarModal');
+        closeAvatarModal.onclick = () => avatarModal.style.display = 'none';
+        window.onclick = (event) => {
+            if (event.target === avatarModal) avatarModal.style.display = 'none';
+            if (event.target === chatModal) chatModal.style.display = 'none';
+            if (event.target === configModal) configModal.style.display = 'none';
+        };
+
+        // Đóng modal ảnh lớn
+        const photoFullModal = document.getElementById('photoFullModal');
+        const closePhotoFullModal = document.getElementById('closePhotoFullModal');
+        closePhotoFullModal.onclick = () => photoFullModal.style.display = 'none';
+        window.addEventListener('click', (event) => {
+            if (event.target === photoFullModal) photoFullModal.style.display = 'none';
+        });
+    </script>
+</body>
+</html> 
