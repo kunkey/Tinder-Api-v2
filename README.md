@@ -1,7 +1,5 @@
 # 🚀 Tinder Tool - Siêu Công Cụ Quản Lý & Tự Động Hóa Tinder
 
-![Tinder Tool Banner](https://user-images.githubusercontent.com/your-banner.png)
-
 ## Giới thiệu
 **Tinder Tool** là ứng dụng web mạnh mẽ giúp bạn quản lý, nhắn tin, tự động hóa và tối ưu trải nghiệm Tinder trên máy tính. Giao diện hiện đại, dễ dùng, nhiều tính năng thông minh giúp bạn tiết kiệm thời gian và tăng hiệu quả kết nối.
 
@@ -15,13 +13,6 @@
 - **Nút "Xem thêm" để tải thêm tin nhắn, nút "Cập nhật" để làm mới thủ công**
 - **Tùy chỉnh cấu hình, vị trí, thông tin xác thực dễ dàng**
 - **Giao diện responsive, đẹp mắt, hỗ trợ cả desktop và mobile**
-
----
-
-## 🖼️ Hình ảnh minh họa
-| Quản lý tin nhắn | Xem album ảnh | Thông báo tin nhắn mới |
-|------------------|--------------|------------------------|
-| ![chat](https://user-images.githubusercontent.com/your-chat-demo.png) | ![album](https://user-images.githubusercontent.com/your-album-demo.png) | ![noti](https://user-images.githubusercontent.com/your-noti-demo.png) |
 
 ---
 
