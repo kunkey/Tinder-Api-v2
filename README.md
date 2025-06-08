@@ -1,4 +1,4 @@
-# 🚀 Tinder Tool - Siêu Công Cụ Quản Lý & Tự Động Hóa Tinder
+# 🚀 Tinder Tool - Công Cụ Quản Lý & Tự Động Hóa Tinder
 
 ## Giới thiệu
 **Tinder Tool** là ứng dụng web mạnh mẽ giúp bạn quản lý, nhắn tin, tự động hóa và tối ưu trải nghiệm Tinder trên máy tính. Giao diện hiện đại, dễ dùng, nhiều tính năng thông minh giúp bạn tiết kiệm thời gian và tăng hiệu quả kết nối.
@@ -32,7 +32,7 @@ npm install
 - Tạo file `.env` để cấu hình cổng (PORT) nếu muốn:
 
 ```env
-PORT=8080
+PORT=3000
 ```
 
 ### 4. Chạy ứng dụng
@@ -44,9 +44,9 @@ npm start
 ### 5. Chạy bằng Docker (khuyên dùng cho production)
 ```bash
 docker build -t tinder-tool .
-docker run -d --env-file .env -p 8080:8080 tinder-tool
+docker run -d --env-file .env -p 3000:3000 tinder-tool
 ```
-- Truy cập: [http://localhost:8080](http://localhost:8080)
+- Truy cập: [http://localhost:3000](http://localhost:3000)
 
 ---
 
@@ -58,16 +58,9 @@ docker run -d --env-file .env -p 8080:8080 tinder-tool
 
 ---
 
-## 🛠️ Công nghệ sử dụng
-- Node.js, Express, EJS, Socket.IO
-- HTML5, CSS3, JavaScript hiện đại
-- Tinder API (reverse engineered)
-
----
-
 ## 📣 Đóng góp & Liên hệ
-- Đóng góp ý tưởng, báo lỗi hoặc PR tại [GitHub Issues](https://github.com/your-username/tinder-tool/issues)
-- Liên hệ tác giả: [your-email@example.com]
+- Đóng góp ý tưởng, báo lỗi hoặc PR tại [GitHub Issues](https://github.com/kunkey/Tinder-Api-v2/issues)
+- Liên hệ tác giả: [https://kunkey.dev]
 
 ---
 
