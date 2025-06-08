@@ -1,6 +1,6 @@
 {
-  "likeRecommendUser": false,
-  "sendMessageToMatchedUser": false,
+  "likeRecommendUser": true,
+  "sendMessageToMatchedUser": true,
   "message": [
     "hí {{name}} 😶",
     "hi {{name}} 😁",
@@ -9,8 +9,7 @@
     "tớ vừa thấy c match lại nè?",
     "xinh đẹp",
     "xinh đẹp ạ",
-    "uầy, xinh đẹp ạ",
-    "okok"
+    "uầy, xinh đẹp ạ"
   ],
   "location": {
     "lat": 24.0277644,

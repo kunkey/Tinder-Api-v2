@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tinder Tool</title>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css?t=<%= Date.now() %>">
     <script src="/socket.io/socket.io.js"></script>
+    <link rel="icon" type="image/png" href="/favicon.png">
 </head>
 <body>
     <div class="container">
@@ -17,6 +18,14 @@
                 <path d="M9 8l6 4-6 4V8z" fill="#fff"/>
             </svg>
         </button>
+        <button id="stopFloatingBtn" class="stop-btn" title="Dừng">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="11" fill="#e74c3c"/>
+                <rect x="8" y="8" width="8" height="8" rx="2" fill="#fff"/>
+            </svg>
+        </button>
+
+
         <button id="openConfigBtn" class="config-btn" title="Cấu hình">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
@@ -41,13 +50,19 @@
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="#fff"/>
             </svg>
         </button>
+        <button id="refreshBtn" class="refresh-btn" title="Làm mới dữ liệu">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="11" fill="#FFA500"/>
+                <path d="M17.65 6.35A7.95 7.95 0 0 0 12 4V1l-4 4 4 4V6c1.93 0 3.68.78 4.95 2.05A7.007 7.007 0 0 1 19 12c0 1.85-.63 3.55-1.69 4.9l1.45 1.45A8.963 8.963 0 0 0 21 12c0-2.39-.94-4.57-2.35-6.35zM6.35 17.65A7.95 7.95 0 0 0 12 20v3l4-4-4-4v3c-1.93 0-3.68-.78-4.95-2.05A7.007 7.007 0 0 1 5 12c0-1.85.63-3.55 1.69-4.9L5.24 5.65A8.963 8.963 0 0 0 3 12c0 2.39.94 4.57 2.35 6.35z" fill="#fff"/>
+            </svg>
+        </button>
         <!-- Modal cấu hình -->
         <div id="configModal" class="modal">
             <div class="modal-content">
                 <span class="close" id="closeConfigBtn">&times;</span>
                 <div class="modal-forms">
                     <section class="auth-section">
-                        <h2>Cấu hình Auth</h2>
+                        <h2>Cấu hình Auth Tinder</h2>
                         <form id="authForm">
                             <div class="form-group">
                                 <label for="meID">Me ID</label>
@@ -81,7 +96,7 @@
                         </form>
                     </section>
                     <section class="settings-section">
-                        <h2>Cấu hình</h2>
+                        <h2>Cấu hình cài đặt tự động</h2>
                         <form id="settingsForm">
                             <div class="form-group">
                                 <label class="toggle">
@@ -125,7 +140,8 @@
                                 <button type="submit" class="btn btn-primary">Cập nhật Cài đặt</button>
                             </div>
                         </form>
-                        <div class="control-buttons">
+                        
+                        <div class="control-buttons" style="display: none;">
                             <button id="startBtn" class="btn btn-success">Bắt đầu</button>
                             <button id="stopBtn" class="btn btn-danger" disabled>Dừng</button>
                         </div>
@@ -156,11 +172,18 @@
             </div>
         </div>
         <!-- Thêm modal hiển thị ảnh lớn khi click vào từng ảnh -->
-        <div id="photoFullModal" class="modal">
+        <div id="photoFullModal" class="modal" style="z-index:9999;">
             <div class="modal-content" style="max-width: 90vw; max-height: 90vh; background: transparent; box-shadow:none; display:flex; align-items:center; justify-content:center;">
                 <span class="close" id="closePhotoFullModal" style="position:absolute;top:16px;right:32px;font-size:2.5rem;color:#fff;z-index:10;cursor:pointer;">&times;</span>
                 <img id="photoFullImg" src="" style="max-width:90vw; max-height:80vh; border-radius:18px; box-shadow:0 4px 32px rgba(0,0,0,0.25); background:#fff;" />
             </div>
+        </div>
+        <!-- Thêm modal hiển thị profile chi tiết -->
+        <div id="profileModal" class="modal" style="z-index:9998;">
+          <div class="modal-content" style="max-width: 400px;">
+            <span class="close" id="closeProfileModal">&times;</span>
+            <div id="profileDetail"></div>
+          </div>
         </div>
     </div>
 
@@ -257,8 +280,8 @@
                 
                 if (data.success) {
                     isRunning = true;
-                    document.getElementById('startBtn').disabled = true;
-                    document.getElementById('stopBtn').disabled = false;
+                    // document.getElementById('startBtn').disabled = true;
+                    // document.getElementById('stopBtn').disabled = false;
                     showAlert('Đã bắt đầu tự động like và gửi tin nhắn', 'success');
                 } else {
                     showAlert(data.message || 'Không thể bắt đầu', 'error');
@@ -269,7 +292,7 @@
         });
 
         // Xử lý nút Stop
-        document.getElementById('stopBtn').addEventListener('click', async () => {
+        document.getElementById('stopFloatingBtn').addEventListener('click', async () => {
             try {
                 const response = await fetch('/api/stop', {
                     method: 'POST',
@@ -281,8 +304,8 @@
                 
                 if (data.success) {
                     isRunning = false;
-                    document.getElementById('startBtn').disabled = false;
-                    document.getElementById('stopBtn').disabled = true;
+                    // document.getElementById('startBtn').disabled = false;
+                    // document.getElementById('stopBtn').disabled = true;
                     showAlert('Đã dừng tự động like và gửi tin nhắn', 'success');
                 } else {
                     showAlert(data.message || 'Không thể dừng', 'error');
@@ -485,7 +508,9 @@
         }
 
         // Hiển thị danh sách gợi ý match dạng lưới
+        let recommendationsLoaded = false;
         async function fetchRecommendations() {
+            if (recommendationsLoaded) return;
             try {
                 const res = await fetch('/api/recommendations');
                 const data = await res.json();
@@ -498,17 +523,59 @@
                 data.data.data.results.forEach(user => {
                     const card = document.createElement('div');
                     card.className = 'recommend-card';
+                    const distance = user.distance_km ? `${user.distance_km} km` : (user.distance_mi ? `${(user.distance_mi * 1.60934).toFixed(1)} km` : '');
                     card.innerHTML = `
-                        <div class="recommend-img-wrap">
-                            <img src="${user.user.photos[0].url}" alt="${user.user.name}" />
+                        <div class="recommend-img-wrap" style="position:relative;">
+                            <img src="${user.user.photos[0].url}" alt="${user.user.name}" class="profile-img-click" style="cursor:pointer;" />
+                            <div class="recommend-actions" style="display:flex;justify-content:center;gap:18px;margin-top:0;position:absolute;bottom:10px;left:0;width:100%;z-index:2;">
+                                <button class="dislike-btn" title="Dislike" style="background:#fff;border:none;font-size:2rem;cursor:pointer;color:#e74c3c;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">❌</button>
+                                <button class="like-btn" title="Like" style="background:#fff;border:none;font-size:2rem;cursor:pointer;color:#4CAF50;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">✔️</button>
+                            </div>
                         </div>
                         <div class="recommend-info">
-                            <h3>${user.user.name}</h3>
+                            <h3>${user.user.name}${distance ? ` - ${distance}` : ''}</h3>
                             <p>${user.user.bio ? user.user.bio : ''}</p>
                         </div>
                     `;
+                    // Gắn sự kiện click cho ảnh
+                    card.querySelector('.profile-img-click').onclick = () => {
+                        showProfileModal(user.user, distance);
+                    };
+                    // Xử lý nút Dislike
+                    card.querySelector('.dislike-btn').onclick = async (e) => {
+                        e.stopPropagation();
+                        try {
+                            const res = await fetch(`/api/dislike`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId: user.user._id })
+                            });
+                            const result = await res.json();
+                            if(result.success) card.remove();
+                            else showAlert(result.message || 'Lỗi khi dislike', false);
+                        } catch (err) {
+                            showAlert('Lỗi khi dislike', false);
+                        }
+                    };
+                    // Xử lý nút Like
+                    card.querySelector('.like-btn').onclick = async (e) => {
+                        e.stopPropagation();
+                        try {
+                            const res = await fetch(`/api/like`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId: user.user._id })
+                            });
+                            const result = await res.json();
+                            if(result.success) card.remove();
+                            else showAlert(result.message || 'Lỗi khi like', false);
+                        } catch (err) {
+                            showAlert('Lỗi khi like', false);
+                        }
+                    };
                     grid.appendChild(card);
                 });
+                // recommendationsLoaded = true;
             } catch (e) {
                 document.getElementById('recommendGrid').innerHTML = '<p style="text-align:center">Lỗi tải dữ liệu</p>';
             }
@@ -621,6 +688,125 @@
         closePhotoFullModal.onclick = () => photoFullModal.style.display = 'none';
         window.addEventListener('click', (event) => {
             if (event.target === photoFullModal) photoFullModal.style.display = 'none';
+        });
+
+        // Xử lý nút làm mới dữ liệu realtime
+        document.getElementById('refreshBtn').onclick = () => {
+            socket.emit('refresh-realtime-data');
+            showAlert('Đang làm mới dữ liệu...', true);
+        };
+        // Lắng nghe dữ liệu realtime-update từ server (nếu muốn cập nhật UI realtime)
+        socket.on('realtime-update', (data) => {
+            console.log(data);
+            // Reset biến recommendationsLoaded để cho phép cập nhật lại
+            recommendationsLoaded = false;
+
+            console.log(data.recommendations,
+            data.recommendations.data.results);
+
+            if (data.recommendations && data.recommendations.data && data.recommendations.data.results) {
+                const grid = document.getElementById('recommendGrid');  
+                grid.innerHTML = '';
+                data.recommendations.data.results.forEach(user => {
+                    const card = document.createElement('div');
+                    card.className = 'recommend-card';
+                    const distance = user.distance_km ? `${user.distance_km} km` : (user.distance_mi ? `${(user.distance_mi * 1.60934).toFixed(1)} km` : '');
+                    card.innerHTML = `
+                        <div class="recommend-img-wrap" style="position:relative;">
+                            <img src="${user.user.photos[0].url}" alt="${user.user.name}" class="profile-img-click" style="cursor:pointer;" />
+                            <div class="recommend-actions" style="display:flex;justify-content:center;gap:18px;margin-top:0;position:absolute;bottom:38px;left:0;width:100%;z-index:2;">
+                                <button class="dislike-btn" title="Dislike" style="background:#fff;border:none;font-size:2rem;cursor:pointer;color:#e74c3c;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:50%;width:57px;height:57px;display:flex;align-items:center;justify-content:center;">❌</button>
+                                <button class="like-btn" title="Like" style="background:#fff;border:none;font-size:2rem;cursor:pointer;color:#4CAF50;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:50%;width:57px;height:57px;display:flex;align-items:center;justify-content:center;">✔️</button>
+                            </div>
+                        </div>
+                        <div class="recommend-info">
+                            <h3>${user.user.name}${distance ? ` - ${distance}` : ''}</h3>
+                            <p>${user.user.bio ? user.user.bio : ''}</p>
+                        </div>
+                    `;
+                    // Gắn sự kiện click cho ảnh
+                    card.querySelector('.profile-img-click').onclick = () => {
+                        showProfileModal(user.user, distance);
+                    };
+                    // Xử lý nút Dislike
+                    card.querySelector('.dislike-btn').onclick = async (e) => {
+                        e.stopPropagation();
+                        try {
+                            const res = await fetch(`/api/dislike`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId: user.user._id })
+                            });
+                            const result = await res.json();
+                            if(result.success) card.remove();
+                            else showAlert(result.message || 'Lỗi khi dislike', false);
+                        } catch (err) {
+                            showAlert('Lỗi khi dislike', false);
+                        }
+                    };
+                    // Xử lý nút Like
+                    card.querySelector('.like-btn').onclick = async (e) => {
+                        e.stopPropagation();
+                        try {
+                            const res = await fetch(`/api/like`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId: user.user._id })
+                            });
+                            const result = await res.json();
+                            if(result.success) card.remove();
+                            else showAlert(result.message || 'Lỗi khi like', false);
+                        } catch (err) {
+                            showAlert('Lỗi khi like', false);
+                        }
+                    };
+                    grid.appendChild(card);
+                });
+            }
+            showAlert('Đã làm mới dữ liệu!', true);
+        });
+
+        // Thêm hàm hiển thị modal profile (danh sách ảnh dạng lưới, click vào ảnh xem lớn)
+        function showProfileModal(user, distance) {
+          const modal = document.getElementById('profileModal');
+          const detail = document.getElementById('profileDetail');
+          let photosHtml = '';
+          if (user.photos && user.photos.length > 0) {
+            photosHtml = `<div id="profilePhotoGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:18px;">` +
+              user.photos.map((photo, idx) => `<img src="${photo.url}" alt="${user.name}" class="profile-photo-thumb" data-photo-idx="${idx}" style="width:100%;border-radius:16px;object-fit:cover;aspect-ratio:1/1;box-shadow:0 2px 12px rgba(0,0,0,0.10);cursor:pointer;" />`).join('') +
+              `</div>`;
+          }
+          detail.innerHTML = `
+            ${photosHtml}
+            <h2 style="margin:0 0 8px 0;">${user.name}${distance ? ` - ${distance}` : ''}</h2>
+            <p>${user.bio ? user.bio : ''}</p>
+            <p>Tuổi: ${user.age || 'Không rõ'}</p>
+          `;
+          modal.style.display = 'block';
+
+          // Gắn sự kiện click vào từng ảnh để xem lớn
+          setTimeout(() => {
+            document.querySelectorAll('.profile-photo-thumb').forEach(img => {
+              img.onclick = function() {
+                showPhotoFullModal(this.src);
+              };
+            });
+          }, 0);
+        }
+
+        // Hàm show modal ảnh lớn
+        function showPhotoFullModal(url) {
+          const photoFullModal = document.getElementById('photoFullModal');
+          const photoFullImg = document.getElementById('photoFullImg');
+          photoFullImg.src = url;
+          photoFullModal.style.display = 'block';
+        }
+
+        document.getElementById('closeProfileModal').onclick = () => {
+          document.getElementById('profileModal').style.display = 'none';
+        };
+        window.addEventListener('click', (event) => {
+          if (event.target === document.getElementById('profileModal')) document.getElementById('profileModal').style.display = 'none';
         });
     </script>
 </body>

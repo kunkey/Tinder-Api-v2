@@ -5,7 +5,6 @@ const fs = require('fs');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const axios = require('axios');
-const TinderApi = require('./TinderApi');
 
 const app = express();
 const httpServer = createServer(app);
@@ -69,8 +68,8 @@ app.post('/update-settings', (req, res) => {
         const data = req.body;
         
         // Cập nhật các trường settings
-        settings.likeRecommendUser = data.likeRecommendUser === 'true';
-        settings.sendMessageToMatchedUser = data.sendMessageToMatchedUser === 'true';
+        settings.likeRecommendUser = data.likeRecommendUser === 'true' || data.likeRecommendUser === 'on';
+        settings.sendMessageToMatchedUser = data.sendMessageToMatchedUser === 'true' || data.sendMessageToMatchedUser === 'on';
         settings.message = data.message.split('\n').filter(msg => msg.trim());
         settings.location = {
             lat: parseFloat(data.lat),
@@ -297,6 +296,50 @@ app.post('/api/unmatch', async (req, res) => {
     }
 });
 
+// API dislike user
+app.post('/api/dislike', async (req, res) => {
+    try {
+        const auth = readConfig('auth.json');
+        const userId = req.body.userId;
+        if (!userId) return res.json({ success: false, message: 'Thiếu userId' });
+        const response = await axios({
+            method: 'post',
+            url: `https://api.gotinder.com/pass/${userId}?locale=vi`,
+            headers: {
+                'accept': 'application/json',
+                'accept-language': 'vi,vi-VN,en-US,en,zh-CN',
+                'app-session-id': auth['app-session-id'],
+                'app-session-time-elapsed': auth['app-session-time-elapsed'],
+                'app-version': '1062100',
+                'cache-control': 'no-cache',
+                'dnt': '1',
+                'origin': 'https://tinder.com',
+                'persistent-device-id': auth['persistent-device-id'],
+                'platform': 'web',
+                'pragma': 'no-cache',
+                'priority': 'u=1, i',
+                'referer': 'https://tinder.com/',
+                'sec-ch-ua': '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'cross-site',
+                'tinder-version': '6.21.0',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+                'user-session-id': auth['user-session-id'],
+                'user-session-time-elapsed': auth['user-session-time-elapsed'],
+                'x-auth-token': auth['x-auth-token'],
+                'x-supported-image-formats': 'webp,jpeg'
+            }
+        });
+        res.json({ success: true, data: response.data });
+    } catch (error) {
+        console.error('Lỗi dislike:', error?.response?.data || error.message);
+        res.json({ success: false, message: 'Lỗi khi dislike', error: error?.response?.data || error.message });
+    }
+});
+
 // Biến toàn cục để theo dõi trạng thái
 let isAutoRunning = false;
 let autoLikeInterval = null;
@@ -317,6 +360,27 @@ app.post('/api/start', async (req, res) => {
 
     if (!auth['x-auth-token']) {
       return res.json({ success: false, message: 'Vui lòng cập nhật thông tin xác thực' });
+    }
+
+    // Gọi API cập nhật vị trí trước khi auto
+    try {
+        await axios({
+            method: 'post',
+            url: 'https://api.gotinder.com/v2/meta?locale=vi',
+            headers: {
+                'authority': 'api.gotinder.com',
+                'accept': 'application/json',
+                'content-type': 'application/json',
+                'x-auth-token': auth['x-auth-token']
+            },
+            data: {
+                lat: settings.location.lat,
+                long: settings.location.long,
+                force_fetch_resources: true
+            }
+        });
+    } catch (err) {
+        return res.json({ success: false, message: 'Lỗi cập nhật vị trí: ' + (err?.response?.data?.message || err.message) });
     }
 
     // Kiểm tra token và rate limit trước khi bắt đầu auto
@@ -498,57 +562,61 @@ app.post('/api/stop', (req, res) => {
   }
 });
 
+const sendRealtimeData = async (socket) => {
+  try {
+      const auth = readConfig('auth.json');
+      const settings = readConfig('setting.json');
+      
+      // Lấy recommendations
+      const recommendationsResponse = await axios({
+          method: 'get',
+          url: `https://api.gotinder.com/v2/recs/core?locale=vi`,
+          headers: {
+              'authority': 'api.gotinder.com',
+              'accept': 'application/json',
+              'x-auth-token': auth['x-auth-token']
+          }
+      });
+
+      // Lấy matches
+      const matchesResponse = await axios({
+          method: 'get',
+          url: `https://api.gotinder.com/v2/matches?locale=vi&count=60&message=0&is_tinder_u=false`,
+          headers: {
+              'authority': 'api.gotinder.com',
+              'accept': 'application/json',
+              'x-auth-token': auth['x-auth-token']
+          }
+      });
+
+      socket.emit('realtime-update', {
+          recommendations: recommendationsResponse.data,
+          matches: matchesResponse.data,
+          settings
+      });
+  } catch (error) {
+      console.error('Lỗi gửi dữ liệu realtime:', error);
+  }
+};
+
 // Socket.IO
 io.on('connection', (socket) => {
     lastSocket = socket;
     console.log('Client connected');
     
-    const sendRealtimeData = async () => {
-        try {
-            const auth = readConfig('auth.json');
-            const settings = readConfig('setting.json');
-            
-            // Lấy recommendations
-            const recommendationsResponse = await axios({
-                method: 'get',
-                url: `https://api.gotinder.com/v2/recs/core?locale=vi`,
-                headers: {
-                    'authority': 'api.gotinder.com',
-                    'accept': 'application/json',
-                    'x-auth-token': auth['x-auth-token']
-                }
-            });
-
-            // Lấy matches
-            const matchesResponse = await axios({
-                method: 'get',
-                url: `https://api.gotinder.com/v2/matches?locale=vi&count=60&message=0&is_tinder_u=false`,
-                headers: {
-                    'authority': 'api.gotinder.com',
-                    'accept': 'application/json',
-                    'x-auth-token': auth['x-auth-token']
-                }
-            });
-
-            socket.emit('realtime-update', {
-                recommendations: recommendationsResponse.data,
-                matches: matchesResponse.data,
-                settings
-            });
-        } catch (error) {
-            console.error('Lỗi gửi dữ liệu realtime:', error);
-        }
-    };
-
     // Gửi dữ liệu ngay khi kết nối
-    sendRealtimeData();
+    sendRealtimeData(socket);
 
-    // Gửi dữ liệu mỗi 5 giây
-    const interval = setInterval(sendRealtimeData, 5000);
+    // // Gửi dữ liệu mỗi 5 giây
+    // const interval = setInterval(sendRealtimeData, 5000);
+
+    socket.on('refresh-realtime-data', () => {
+      sendRealtimeData(socket);
+    });
 
     socket.on('disconnect', () => {
         console.log('Client disconnected');
-        clearInterval(interval);
+        // clearInterval(interval);
     });
 });
 
@@ -594,6 +662,11 @@ app.get('/api/matches', async (req, res) => {
         res.json({ success: false, message: 'Lỗi server' });
     }
 });
+
+// setInterval(() => {
+//   console.log("isAutoRunning: ", isAutoRunning);
+// }, 1000);
+
 
 httpServer.listen(port, () => {
     console.log(`Server đang chạy tại http://localhost:${port}`);

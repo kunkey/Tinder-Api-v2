@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    container_name: tinder-app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+    networks:
+      - tinder-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: tinder-nginx
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - tinder-network
+
+networks:
+  tinder-network:
+    driver: bridge 

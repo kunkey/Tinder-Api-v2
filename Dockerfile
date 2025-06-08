@@ -1,5 +1,5 @@
 # Dockerfile cho Tinder Tool
-FROM node:18
+FROM node:18-alpine
 
 # Tạo thư mục app
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Cài đặt dependencies
-RUN npm install --production
+RUN npm install
 
 # Copy toàn bộ mã nguồn
 COPY . .
@@ -17,4 +17,4 @@ COPY . .
 EXPOSE ${PORT:-3000}
 
 # Chạy app
-CMD ["sh", "-c", "node src/server.js"] 
+CMD ["node", "src/server.js"] 
