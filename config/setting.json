@@ -18,5 +18,6 @@
   "unMatch": {
     "distance": 10,
     "gender": "0"
-  }
+  },
+  "aiFaceBeauty": true
 }

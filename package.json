@@ -1,20 +1,21 @@
 {
-  "name": "tinder-auth-editor",
+  "name": "tinder",
   "version": "1.0.0",
-  "description": "Tinder style auth.json editor",
+  "description": "Tinder automation tool",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js"
   },
   "dependencies": {
-    "axios": "^1.9.0",
-    "body-parser": "^1.20.2",
-    "ejs": "^3.1.9",
+    "axios": "^1.6.7",
+    "dotenv": "^16.5.0",
+    "ejs": "^3.1.10",
     "express": "^4.18.2",
-    "socket.io": "^4.7.4"
+    "socket.io": "^4.7.4",
+    "socket.io-client": "^4.7.4"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.3"
   }
 }

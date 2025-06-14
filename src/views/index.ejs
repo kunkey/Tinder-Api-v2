@@ -137,6 +137,13 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label class="toggle">
+                                    <input type="checkbox" name="aiFaceBeauty" <%= settings.aiFaceBeauty ? 'checked' : '' %>>
+                                    <span class="slider"></span>
+                                    AI Chấm Điểm Khuân Mặt
+                                </label>
+                            </div>
+                            <div class="form-group">
                                 <button type="submit" class="btn btn-primary">Cập nhật Cài đặt</button>
                             </div>
                         </form>
@@ -155,12 +162,24 @@
                 <div class="modal-tabs">
                     <button class="tab-btn active" data-tab="unreplied">Tin nhắn chưa trả lời</button>
                     <button class="tab-btn" data-tab="messages">Tin nhắn đã nhắn</button>
+                    <button class="tab-btn" data-tab="bulkmessage">Gửi tin nhắn hàng loạt</button>
                 </div>
                 <div id="unrepliedTab" class="tab-content active">
                     <div id="unrepliedList"></div>
                 </div>
                 <div id="messagesTab" class="tab-content">
                     <div id="messagesList"></div>
+                </div>
+                <div id="bulkMessageTab" class="tab-content">
+                    <div style="margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+                        <input type="checkbox" id="selectAllBulk" style="transform:scale(1.3);margin-right:8px;">
+                        <label for="selectAllBulk" style="font-weight:bold;cursor:pointer;">Chọn tất cả</label>
+                        <button id="loadMoreBulkBtn" style="margin-left:auto;">Load more</button>
+                    </div>
+                    <div id="bulkMessageList" style="max-height:480px;overflow-y:auto;margin-bottom:12px;"></div>
+                    <textarea id="bulkMessageContent" rows="4" style="width:100%;margin-bottom:10px;" placeholder="Nhập nhiều dòng, mỗi dòng là một mẫu tin nhắn..."></textarea>
+                    <button id="sendBulkMessageBtn" class="btn btn-primary">Gửi hàng loạt</button>
+                    <div id="bulkMessageResult" style="margin-top:10px;"></div>
                 </div>
             </div>
         </div>
@@ -346,22 +365,23 @@
             document.querySelector('[data-tab="messages"]').click();
         };
 
-        // Xử lý chuyển tab
-        document.querySelectorAll('.tab-btn').forEach(btn => {
+        // Sửa lại xử lý chuyển tab để hỗ trợ tab bulkmessage
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                // Xóa active class từ tất cả các tab
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                tabBtns.forEach(b => b.classList.remove('active'));
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
-                // Thêm active class cho tab được chọn
                 btn.classList.add('active');
-                document.getElementById(btn.dataset.tab + 'Tab').classList.add('active');
-                
-                // Load dữ liệu tương ứng
                 if (btn.dataset.tab === 'unreplied') {
+                    document.getElementById('unrepliedTab').classList.add('active');
                     fetchUnrepliedMatches();
-                } else {
+                } else if (btn.dataset.tab === 'messages') {
+                    document.getElementById('messagesTab').classList.add('active');
                     fetchMessages();
+                } else if (btn.dataset.tab === 'bulkmessage') {
+                    document.getElementById('bulkMessageTab').classList.add('active');
+                    document.getElementById('bulkMessageResult').innerHTML = '';
+                    fetchBulkMatches();
                 }
             });
         });
@@ -524,9 +544,19 @@
                     const card = document.createElement('div');
                     card.className = 'recommend-card';
                     const distance = user.distance_km ? `${user.distance_km} km` : (user.distance_mi ? `${(user.distance_mi * 1.60934).toFixed(1)} km` : '');
+                    // Thêm tag điểm beauty
+                    const beauty = user.beauty;
+                    let beautyTag = '';
+                    if (beauty && typeof beauty.debug?.beautyScore === 'number') {
+                        const score = beauty.debug.beautyScore;
+                        beautyTag = `<div style="position:absolute;top:8px;right:8px;background:${beauty.isBeautiful ? '#4CAF50' : '#e74c3c'};color:#fff;padding:4px 10px;border-radius:12px;font-weight:bold;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.10);z-index:3;">
+                            ${beauty.isBeautiful ? 'Xinh' : 'Không xinh'} ${score.toFixed(2)}
+                        </div>`;
+                    }
                     card.innerHTML = `
                         <div class="recommend-img-wrap" style="position:relative;">
                             <img src="${user.user.photos[0].url}" alt="${user.user.name}" class="profile-img-click" style="cursor:pointer;" />
+                            ${beautyTag}
                             <div class="recommend-actions" style="display:flex;justify-content:center;gap:18px;margin-top:0;position:absolute;bottom:10px;left:0;width:100%;z-index:2;">
                                 <button class="dislike-btn" title="Dislike" style="background:#fff;border:none;font-size:2rem;cursor:pointer;color:#e74c3c;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">❌</button>
                                 <button class="like-btn" title="Like" style="background:#fff;border:none;font-size:2rem;cursor:pointer;color:#4CAF50;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">✔️</button>
@@ -711,12 +741,22 @@
                     const card = document.createElement('div');
                     card.className = 'recommend-card';
                     const distance = user.distance_km ? `${user.distance_km} km` : (user.distance_mi ? `${(user.distance_mi * 1.60934).toFixed(1)} km` : '');
+                    // Thêm tag điểm beauty
+                    const beauty = user.beauty;
+                    let beautyTag = '';
+                    if (beauty && typeof beauty.debug?.beautyScore === 'number') {
+                        const score = beauty.debug.beautyScore;
+                        beautyTag = `<div style="position:absolute;top:8px;right:8px;background:${beauty.isBeautiful ? '#4CAF50' : '#e74c3c'};color:#fff;padding:4px 10px;border-radius:12px;font-weight:bold;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.10);z-index:3;">
+                            ${beauty.isBeautiful ? 'Xinh' : 'Không xinh'} ${score.toFixed(2)}
+                        </div>`;
+                    }
                     card.innerHTML = `
                         <div class="recommend-img-wrap" style="position:relative;">
                             <img src="${user.user.photos[0].url}" alt="${user.user.name}" class="profile-img-click" style="cursor:pointer;" />
-                            <div class="recommend-actions" style="display:flex;justify-content:center;gap:18px;margin-top:0;position:absolute;bottom:38px;left:0;width:100%;z-index:2;">
-                                <button class="dislike-btn" title="Dislike" style="background:#fff;border:none;font-size:2rem;cursor:pointer;color:#e74c3c;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:50%;width:57px;height:57px;display:flex;align-items:center;justify-content:center;">❌</button>
-                                <button class="like-btn" title="Like" style="background:#fff;border:none;font-size:2rem;cursor:pointer;color:#4CAF50;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:50%;width:57px;height:57px;display:flex;align-items:center;justify-content:center;">✔️</button>
+                            ${beautyTag}
+                            <div class="recommend-actions" style="display:flex;justify-content:center;gap:18px;margin-top:0;position:absolute;bottom:10px;left:0;width:100%;z-index:2;">
+                                <button class="dislike-btn" title="Dislike" style="background:#fff;border:none;font-size:2rem;cursor:pointer;color:#e74c3c;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">❌</button>
+                                <button class="like-btn" title="Like" style="background:#fff;border:none;font-size:2rem;cursor:pointer;color:#4CAF50;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">✔️</button>
                             </div>
                         </div>
                         <div class="recommend-info">
@@ -808,6 +848,103 @@
         window.addEventListener('click', (event) => {
           if (event.target === document.getElementById('profileModal')) document.getElementById('profileModal').style.display = 'none';
         });
+
+        // ==== GỬI TIN NHẮN HÀNG LOẠT ====
+        let bulkMatches = [];
+        let bulkNextPageToken = null;
+        let bulkHasMore = true;
+
+        async function fetchBulkMatches(isLoadMore = false) {
+            const list = document.getElementById('bulkMessageList');
+            if (!isLoadMore) {
+                bulkMatches = [];
+                bulkNextPageToken = null;
+                bulkHasMore = true;
+                list.innerHTML = '';
+            }
+            if (!bulkHasMore) return;
+            try {
+                let url = `/api/messages?limit=20`;
+                if (bulkNextPageToken) url += `&page_token=${bulkNextPageToken}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (!data.data || !data.data.data || !data.data.data.matches) return;
+                // Lọc chỉ những người đã nhắn tin
+                const matches = data.data.data.matches.filter(match => (match.messages && match.messages.length > 0) || match.last_message);
+                if (matches.length < 20 || !data.data.data.next_page_token) bulkHasMore = false;
+                bulkMatches = bulkMatches.concat(matches);
+                matches.forEach(match => {
+                    const item = document.createElement('div');
+                    item.className = 'bulk-item';
+                    item.style.display = 'flex';
+                    item.style.alignItems = 'center';
+                    item.style.gap = '16px';
+                    item.style.padding = '8px 0';
+                    item.style.borderBottom = '1px solid #f0f0f0';
+                    item.innerHTML = `
+                        <input type="checkbox" class="bulk-checkbox" data-id="${match._id}" style="margin-left:8px;transform:scale(1.2);">
+                        <img src="${match.person.photos[0].url}" alt="${match.person.name}" style="width:48px;height:48px;object-fit:cover;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+                        <span style="font-weight:500;font-size:1.08rem;">${match.person.name}</span>
+                    `;
+                    list.appendChild(item);
+                });
+                bulkNextPageToken = data.data.data.next_page_token || null;
+            } catch (e) {
+                list.innerHTML = '<div style="text-align:center">Lỗi tải dữ liệu</div>';
+            }
+        }
+
+        document.getElementById('loadMoreBulkBtn').onclick = () => fetchBulkMatches(true);
+
+        document.getElementById('selectAllBulk').onclick = function() {
+            const checked = this.checked;
+            document.querySelectorAll('.bulk-checkbox').forEach(cb => cb.checked = checked);
+        };
+
+        document.getElementById('bulkMessageList').onclick = function(e) {
+            if (e.target.classList.contains('bulk-checkbox')) {
+                const all = document.querySelectorAll('.bulk-checkbox');
+                const allChecked = Array.from(all).every(cb => cb.checked);
+                document.getElementById('selectAllBulk').checked = allChecked;
+            }
+        };
+
+        document.getElementById('sendBulkMessageBtn').onclick = async function() {
+            const checked = Array.from(document.querySelectorAll('.bulk-checkbox:checked'));
+            if (checked.length === 0) {
+                showAlert('Chọn ít nhất 1 người để gửi!', false);
+                return;
+            }
+            const matchIds = checked.map(cb => cb.getAttribute('data-id'));
+            const messages = document.getElementById('bulkMessageContent').value.split('\n').map(s => s.trim()).filter(Boolean);
+            if (messages.length === 0) {
+                showAlert('Nhập ít nhất 1 nội dung tin nhắn!', false);
+                return;
+            }
+            document.getElementById('sendBulkMessageBtn').disabled = true;
+            document.getElementById('bulkMessageResult').innerHTML = 'Đang gửi...';
+            try {
+                const res = await fetch('/api/bulk-message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ matchIds, messages })
+                });
+                const data = await res.json();
+                let html = '';
+                data.results.forEach(r => {
+                    html += `<div style="color:${r.success ? '#4CAF50' : '#e74c3c'};font-weight:bold;">${r.name}: ${r.success ? '✔️ Gửi thành công' : '❌ ' + r.error}</div>`;
+                });
+                document.getElementById('bulkMessageResult').innerHTML = html;
+            } catch (e) {
+                document.getElementById('bulkMessageResult').innerHTML = 'Lỗi gửi tin nhắn!';
+            }
+            document.getElementById('sendBulkMessageBtn').disabled = false;
+        };
+
+        // Tăng chiều cao danh sách
+        const bulkListDiv = document.getElementById('bulkMessageList');
+        bulkListDiv.style.maxHeight = '480px';
+        bulkListDiv.style.overflowY = 'auto';
     </script>
 </body>
 </html> 

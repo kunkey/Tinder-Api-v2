@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -5,6 +6,8 @@ const fs = require('fs');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const axios = require('axios');
+const matchHandler = require('./utils/matchHandler');
+const beautyAnalyzer = require('./utils/beautyAnalyzer');
 
 const app = express();
 const httpServer = createServer(app);
@@ -79,6 +82,7 @@ app.post('/update-settings', (req, res) => {
             distance: parseInt(data.distance),
             gender: data.gender
         };
+        settings.aiFaceBeauty = data.aiFaceBeauty === 'true' || data.aiFaceBeauty === 'on';
 
         if (writeConfig('setting.json', settings)) {
             res.json({ success: true, message: 'Cập nhật cài đặt thành công' });
@@ -175,7 +179,28 @@ app.get('/api/recommendations', async (req, res) => {
             }
         });
 
-        res.json({ success: true, data: response.data });
+        // Phân tích beauty score cho từng user (chỉ lấy ảnh đầu tiên) với delay
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        const analyzedResults = [];
+        const results = response.data.data.results;
+        for (const user of results) {
+            let beautyInfo = { isBeautiful: false, reason: 'Không có ảnh', debug: {} };
+            if (user.user && user.user.photos && user.user.photos[0] && user.user.photos[0].url) {
+                try {
+                    beautyInfo = await beautyAnalyzer.analyzeBeauty(user.user.photos[0].url);
+                    await sleep(700); // Chờ 700ms giữa mỗi lần gọi (có thể tăng lên nếu vẫn bị limit)
+                } catch (e) {
+                    beautyInfo = { isBeautiful: false, reason: 'Lỗi phân tích', debug: { error: e.message } };
+                }
+            }
+            analyzedResults.push({
+                ...user,
+                beauty: beautyInfo
+            });
+        }
+        res.json({ success: true, data: { ...response.data, data: { ...response.data.data, results: analyzedResults } } });
     } catch (error) {
         console.error('Lỗi lấy recommendations:', error);
         res.json({ success: false, message: 'Lỗi server' });
@@ -432,17 +457,32 @@ app.post('/api/start', async (req, res) => {
             for (const user of response.data.data.results) {
               if (!isAutoRunning) break;
               try {
-                await axios({
-                  method: 'get',
-                  url: `https://api.gotinder.com/like/${user.user._id}?locale=vi&s_number=${user.s_number}`,
-                  headers: {
-                    'authority': 'api.gotinder.com',
-                    'accept': 'application/json',
-                    'x-auth-token': auth['x-auth-token']
+                // Nếu bật AI chấm điểm khuân mặt thì kiểm tra trước khi like
+                let allowLike = true;
+                if (settings.aiFaceBeauty && user.user && user.user.photos && user.user.photos[0] && user.user.photos[0].url) {
+                  const beautyAnalyzer = require('./utils/beautyAnalyzer');
+                  const beauty = await beautyAnalyzer.analyzeBeauty(user.user.photos[0].url);
+                  if (!beauty.isBeautiful) {
+                    allowLike = false;
+                    console.log(`BỎ QUA (AI): ${user.user.name} (${user.user._id}) - ${beauty.level} (${beauty.debug.beautyScore})`);
+                  } else {
+                    console.log(`LIKE (AI): ${user.user.name} (${user.user._id}) - ${beauty.level} (${beauty.debug.beautyScore})`);
                   }
-                });
-                console.log(`Đã quẹt like: ${user.user.name} (${user.user._id})`);
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                  await new Promise(resolve => setTimeout(resolve, 700));
+                }
+                if (allowLike) {
+                  await axios({
+                    method: 'get',
+                    url: `https://api.gotinder.com/like/${user.user._id}?locale=vi&s_number=${user.s_number}`,
+                    headers: {
+                      'authority': 'api.gotinder.com',
+                      'accept': 'application/json',
+                      'x-auth-token': auth['x-auth-token']
+                    }
+                  });
+                  console.log(`Đã quẹt like: ${user.user.name} (${user.user._id})`);
+                  await new Promise(resolve => setTimeout(resolve, 2000));
+                }
               } catch (error) {
                 console.error(`Lỗi khi like ${user.user.name}:`, error.message);
               }
@@ -660,6 +700,68 @@ app.get('/api/matches', async (req, res) => {
     } catch (error) {
         console.error('Lỗi lấy matches:', error);
         res.json({ success: false, message: 'Lỗi server' });
+    }
+});
+
+app.post('/api/match', async (req, res) => {
+    try {
+        const { userId, action } = req.body;
+        const result = await matchHandler.processMatch(userId, action);
+        res.json(result);
+    } catch (error) {
+        console.error('Lỗi xử lý match:', error);
+        res.json({ success: false, message: 'Lỗi server' });
+    }
+});
+
+// API gửi tin nhắn hàng loạt
+app.post('/api/bulk-message', async (req, res) => {
+    try {
+        const auth = readConfig('auth.json');
+        const { matchIds, messages } = req.body;
+        if (!Array.isArray(matchIds) || !Array.isArray(messages) || matchIds.length === 0 || messages.length === 0) {
+            return res.json({ success: false, message: 'Thiếu dữ liệu' });
+        }
+        const results = [];
+        for (const matchId of matchIds) {
+            try {
+                // Lấy tên người nhận để hiển thị kết quả
+                let name = matchId;
+                try {
+                    const info = await axios({
+                        method: 'get',
+                        url: `https://api.gotinder.com/user/matches/${matchId}?locale=vi`,
+                        headers: {
+                            'authority': 'api.gotinder.com',
+                            'accept': 'application/json',
+                            'x-auth-token': auth['x-auth-token']
+                        }
+                    });
+                    if (info.data && info.data.results && info.data.results.person && info.data.results.person.name) {
+                        name = info.data.results.person.name;
+                    }
+                } catch {}
+                const msg = messages[Math.floor(Math.random() * messages.length)];
+                await axios({
+                    method: 'post',
+                    url: `https://api.gotinder.com/user/matches/${matchId}?locale=vi`,
+                    headers: {
+                        'authority': 'api.gotinder.com',
+                        'accept': 'application/json',
+                        'content-type': 'application/json',
+                        'x-auth-token': auth['x-auth-token']
+                    },
+                    data: { message: msg }
+                });
+                results.push({ matchId, name, success: true });
+                await new Promise(resolve => setTimeout(resolve, 1200));
+            } catch (error) {
+                results.push({ matchId, name, success: false, error: error.message });
+            }
+        }
+        res.json({ success: true, results });
+    } catch (error) {
+        res.json({ success: false, message: 'Lỗi server', error: error.message });
     }
 });
 
